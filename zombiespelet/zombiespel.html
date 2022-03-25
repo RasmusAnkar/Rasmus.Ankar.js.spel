@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <style>
+            body 
+            {
+              overflow-y: hidden;
+              overflow-x: hidden; /* gömmer scrollbar */
+              background-image: url("img/background.jpg");
+            }
+        </style>
+    <script src="simple.js">
+var player1
+var zombies = [];
+var i = 0;
+let bullets = [];
+let direction = [];
+let thememusic = new Audio("sound/backgroundmusic.mp3");
+let reloadsound = new Audio("sound/reload.mp3");
+var placeholder;
+var kills;
+var points = 0;
+var player1hp = 3;
+let change = 0;
+var guntimer = 0;
+var shots = [];
+var s = 0;
+for (var p = 0;p < 10; p++) {
+        shots[p] = new Audio("sound/gunsound.mp3");
+
+}
+while (i < 10) {
+    zombies.push({
+        x: random(0),
+        y: random(200, 600),
+        speed: 2
+    });
+    i += 1;
+}
+
+var ammo = 10;
+let ammoboxcords = {
+    x: random(100, 1400),
+    y: random(150, 600)
+}
+let healthkit = {
+    x: random(200, 1100),
+    y: random(200, 1100)
+}
+player1 = {
+    x: random(totalWidth),
+    y: random(totalHeight),
+    speed: random(5, 10)
+};
+let coin = {
+    x: random(100, 1400),
+    y: random(150, 600)
+};
+function update() {
+    thememusic.play();
+    clearScreen();
+    rectangle(0, totalHeight - 760, totalWidth, 100, "grey"); //border uppe
+    rectangle(0, totalHeight - 20, totalWidth, 30, "grey"); //border nere
+    rectangle(0, 0, 20, totalHeight, "grey"); //border vänster
+    rectangle(1520, 0, 20, totalHeight, "grey"); // border höger
+    // ammo counter
+    if (ammo > 0) {
+        picture(1480, 10, "img/ammo.png")
+    }
+    if (ammo > 1) {
+        picture(1435, 10, "img/ammo.png")
+    }
+    if (ammo > 2) {
+        picture(1390, 10, "img/ammo.png")
+    }
+    if (ammo > 3) {
+        picture(1345, 10, "img/ammo.png")
+    }
+    if (ammo > 4) {
+        picture(1300, 10, "img/ammo.png")
+    }
+    if (ammo > 5) {
+        picture(1255, 10, "img/ammo.png")
+    }
+    if (ammo > 6) {
+        picture(1210, 10, "img/ammo.png")
+    }
+    if (ammo > 7) {
+        picture(1165, 10, "img/ammo.png")
+    }
+    if (ammo > 8) {
+        picture(1120, 10, "img/ammo.png")
+    }
+    if (ammo > 9) {
+        picture(1075, 10, "img/ammo.png")
+    }
+    // ammo refill, gör så att ammunitionen återställs till 10 och spawnar en ny låda på en annan plats
+    picture(ammoboxcords.x, ammoboxcords.y, "img/ammorefill.png") // ammo ammoboxcords
+    if (distance(ammoboxcords, player1) < 70) {
+       reloadsound.play(),  ammo = 10, ammoboxcords.x = random(200, 1100), ammoboxcords.y = random(200, 500)
+    }
+    // Coins, funkar på samma sett som ammunitionslådan fast med ett coin som ger 10 poäng
+    picture(coin.x, coin.y, "img/coin.png")
+    if (distance(coin, mouse) < 70) {
+        points += 10, coin.x = random(100, 1400), coin.y = random(150, 600)
+    }
+    //healthbar
+    rectangle(player1.x + 10, player1.y - 20, 100, 10, "green")
+    // healthbaren och dess storlek
+    rectangle(player1.x + 10, player1.y - 20, 33 * (player1hp - 3) * -1, 10, "black")
+    // timer mellan skotten som går ut på att programmet måste uppdatera  10 gånger innan nästa skott kan avfyras
+    if (guntimer < 10) {
+        guntimer++
+    }
+    // shooting
+    // pushar in en ny bullet i en array med spelarens x och y kordinat samt ger den hastighet åt vänster, minskar ammunitionen, spelar ljud och nollställer timern
+    if (keyboard.space && ammo > 0 && guntimer > 9) {
+        bullets.push([player1.x, player1.y + 40]);
+        direction.push(-1);
+        ammo--;
+        shots[s].play();
+        s ++;
+        guntimer = 0;
+    // samma som föregående fast åt andra hållet med tangenten E
+    } else if (keyboard.e && ammo > -1 && guntimer > 9) {
+        bullets.push([player1.x + 60, player1.y + 40]);
+        direction.push(1);
+        ammo--;
+        shots[s].play();
+        s ++;
+        guntimer = 0;
+
+    }
+    i = 0;
+    // ger kulorna en storlek utifrån kordinaterna 
+    for (i = 0; i < bullets.length; i++) {
+        circle(bullets[i][0], bullets[i][1], 5, "black");
+        bullets[i][0] += 20 * direction[i];
+    }
+    //Zombies
+    i = 0;
+    while (i < 10) {
+        var zombie = zombies[i];
+
+
+        picture(zombie.x, zombie.y, "img/zombie.png");
+        zombie.x += zombie.speed;
+        // jag flyttar först bort zombies när de blir prickade pågrund av en bugg jag hade då den försökte ta bort zombies som inte existerade
+        if (distance(player1, zombies[i]) < 60) {
+            zombies[i].y = 10000;
+            points += 1
+            player1hp--
+
+        }
+        //kollar om kulans position i array x och y kordinat är närmare än 40 px
+        for (let z = 0; z < bullets.length - 1; z++) {
+            if (distance(bullets[z][0], bullets[z][1], zombies[i].x, zombies[i].y) < 70) {
+                zombies[i].y = 10000;
+                points += 1
+
+            }
+        }
+        // byter plats på zombien i array innan den förstörs då pop() bara tar bort den sista i array
+        if (zombies[i].x > totalWidth) {
+            change = zombies[i];
+            placeholder = zombies[zombies.length - 1]
+            zombies[i] = zombies[zombies.length - 1]
+            placeholder = zombies[i]
+            zombies.pop(zombies.length - 1);
+            player1hp--;
+        }
+        if (zombies[i].y > totalHeight) {
+            change = zombies[i];
+            placeholder = zombies[zombies.length - 1]
+            zombies[i] = zombies[zombies.length - 1]
+            placeholder = zombies[i]
+            zombies.pop(zombies.length - 1);
+
+        }
+        i += 1
+        // om en zombie har blivit borttagen ur array skapas en ny
+        if (zombies.length < 10) {
+            zombies.push({
+                x: random(0),
+                y: random(200, 600),
+                speed: 2
+            });
+        }
+
+
+    }
+    if (s > 9) {
+        s = 0;
+    }
+    //spelarens rörelser, har gjort så att den byter png när "d" klickas istället för att vrida den
+    if (keyboard.d) {
+        player1.x += 5, picture(player1.x + 30, player1.y, "img/player1right.png");
+    } else {
+        picture(player1.x, player1.y, "img/Player.png");
+    }
+    if (keyboard.w) {
+        player1.y -= 5
+    };
+    if (keyboard.s) {
+        player1.y += 5
+    };
+    if (keyboard.a) {
+        player1.x -= 5
+    };
+    // mus
+    circle(mouse.x, mouse.y, 10, 10, "red")
+    //borders y-led
+    if (player1.y < totalHeight - 650) {
+        player1.y = totalHeight - 650;
+    }
+    if (player1.y > totalHeight - 120) {
+        player1.y = totalHeight - 120;
+    }
+    //borders x-led
+    if (player1.x < totalWidth - 1530) {
+        player1.x = totalWidth - 1530;
+    }
+    if (player1.x > totalWidth - 80) {
+        player1.x = totalWidth - 80;
+    }
+    //hp, skapar den gröna lådan när spelaren skadas som ger 1hp och försvinner när musen är för nära den
+    if (player1hp < 3) {
+        picture(healthkit.x, healthkit.y, "img/hp.png")
+        if (distance(healthkit, mouse) < 50) {
+            player1hp += 1, healthkit.x = random(100, 1400), healthkit.y = random(150, 500)
+        }
+    }
+    // score, text för poängsystem
+    text(70, 70, 30, "Points:" + points, "red")
+    // Förlora, gör skärmen svart och skriver game over och samtidigt skriver ditt final score
+    if (player1hp < 1) {
+        rectangle(0, 0, totalWidth, totalHeight, "black")
+        text(totalWidth / 4, totalHeight / 2, 100, "GAME OVER", "red");
+        text(totalWidth / 2 - 370, totalHeight / 2 + 100, 50, "Score:" + points, "red");
+        stopUpdate();
+    }
+}  
+        </script>
+    </body>
+</html>
